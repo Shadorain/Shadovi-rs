@@ -40,13 +40,13 @@ impl Terminal {
     }
 
     pub fn set_fg_color (color: color::Rgb) {
-        print!("{}", color::Fg(color))
+        print!("{}", color::Fg(color));
     }
     pub fn reset_fg_color () {
         print!("{}", color::Fg(color::Reset));
     }
     pub fn set_bg_color (color: color::Rgb) {
-        print!("{}", color::Bg(color))
+        print!("{}", color::Bg(color));
     }
     pub fn reset_bg_color () {
         print!("{}", color::Bg(color::Reset));

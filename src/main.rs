@@ -1,4 +1,9 @@
-#![warn(clippy::all, clippy::pedantic)]
+#![warn(clippy::all, clippy::pedantic, clippy::restriction)]
+#![allow(clippy::missing_docs_in_private_items, clippy::implicit_return,
+    clippy::shadow_reuse, clippy::print_stdout, clippy::wildcard_enum_match_arm,
+    clippy::else_if_without_else, clippy::missing_errors_doc, clippy::cast_possible_truncation,
+    clippy::blanket_clippy_restriction_lints, clippy::must_use_candidate
+)]
 
 mod document;
 mod editor;
