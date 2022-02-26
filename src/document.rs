@@ -1,4 +1,4 @@
-use crate::{Row, Position};
+use crate::{Row, Position, SearchDirection};
 use std::fs;
 use std::io::{Error, Write};
 
@@ -94,11 +94,26 @@ impl Document {
         self.dirty
     }
 
-    pub fn find (&self, query: &str) -> Option<Position> {
-        for (y, row) in self.rows.iter().enumerate() {
-            if let Some(x) = row.find(query) {
-                return Some(Position { x, y });
-            }
+    #[allow(clippy::indexing_slicing)]
+    pub fn find (&self, query: &str, at: &Position, direction: SearchDirection) -> Option<Position> {
+        if at.y >= self.rows.len() { return None; }
+        let mut pos = Position { x: at.x, y: at.y };
+        let start = if direction == SearchDirection::Forward { at.y } else { 0 };
+        let end = if direction == SearchDirection::Forward { self.rows.len() } else { at.y.saturating_add(1) };
+        for _ in start .. end {
+            if let Some(row) = self.rows.get(pos.y) {
+                if let Some(x) = row.find(&query, pos.x, direction) {
+                    pos.x = x;
+                    return Some(pos);
+                }
+                if direction == SearchDirection::Forward {
+                    pos.y = pos.y.saturating_add(1);
+                    pos.x = 0;
+                } else {
+                    pos.y = pos.y.saturating_sub(1);
+                    pos.x = self.rows[pos.y].len();
+                }
+            } else { return None; }
         }
         None
     }

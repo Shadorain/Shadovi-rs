@@ -1,6 +1,8 @@
 #![allow(clippy::string_slice)]
 
+use crate::SearchDirection;
 use std::cmp;
+use termion::color;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Default)]
@@ -25,9 +27,18 @@ impl Row {
         let mut result = String::new();
         #[allow(clippy::integer_arithmetic)]
         for grapheme in self.string[..].graphemes(true)
-            .skip(start).take(end - start) {
-                if grapheme == "\t" { result.push_str("  "); }
-                else { result.push_str(grapheme); }
+            .skip(start).take(end - start)
+        {
+            if let Some(c) = grapheme.chars().next() {
+                if c == '\t' { result.push_str("  "); }
+                else if c.is_ascii_digit() {
+                    result.push_str(&format!("{}{}{}", termion::color::Fg(
+                        color::Rgb(220, 163, 163)),
+                        c,
+                        color::Fg(color::Reset)
+                    )[..]);
+                } else { result.push(c); }
+            }
         }
         result
     }
@@ -103,12 +114,20 @@ impl Row {
         self.string.as_bytes()
     }
 
-    pub fn find (&self, query: &str) -> Option<usize> {
-        let matching_byte_idx = self.string.find(query);
+    pub fn find (&self, query: &str, at: usize, direction: SearchDirection) -> Option<usize> {
+        if at > self.len() { return None; }
+        let start = if direction == SearchDirection::Forward { at } else { 0 };
+        let end = if direction == SearchDirection::Forward { self.len() } else { at };
+        #[allow(clippy::integer_arithmetic)]
+        let substring: String = self.string[..].graphemes(true).skip(start)
+            .take(end - start).collect();
+        let matching_byte_idx = if direction == SearchDirection::Forward { substring.find(query) }
+            else { substring.rfind(query) };
         if let Some(matching_byte_idx) = matching_byte_idx {
-            for (grapheme_idx, (byte_idx, _)) in self.string[..].grapheme_indices(true).enumerate() {
+            for (grapheme_idx, (byte_idx, _)) in substring[..].grapheme_indices(true).enumerate() {
                 if matching_byte_idx == byte_idx {
-                    return Some(grapheme_idx);
+                    #[allow(clippy::integer_arithmetic)]
+                    return Some(start + grapheme_idx);
                 }
             }
         }
